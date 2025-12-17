@@ -17,7 +17,7 @@ export function Navbar() {
         <Link href="/countries" className="hover:text-primary transition-colors">Destinations</Link>
         <a href="#contact" className="hover:text-primary transition-colors">Contact</a>
       </div>
-      <Link href="/login">
+      <Link href="/user/login">
         <Button variant="ghost" size="sm">Sign In</Button>
       </Link>
     </nav>

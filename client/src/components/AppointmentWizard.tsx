@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, CheckCircle } from "lucide-react";
+import { X, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CityOption } from "./WizardSteps/CitySelection";
 import { TravelerForm } from "./WizardSteps/TravelerForm";
+import { useApplicationStore, Traveler } from "@/store/applicationStore";
 
 interface AppointmentWizardProps {
   isOpen: boolean;
@@ -14,7 +15,40 @@ interface AppointmentWizardProps {
 
 export function AppointmentWizard({ isOpen, onClose }: AppointmentWizardProps) {
   const [step, setStep] = useState<"city" | "details" | "confirmation">("city");
-  const [selectedCity, setSelectedCity] = useState<string | null>(null);
+  
+  const { 
+    setCity, 
+    city, 
+    setTravelers, 
+    submitApplication, 
+    submissionStatus, 
+    errorMessage,
+    reset
+  } = useApplicationStore();
+
+  const handleCitySelect = (selectedCity: string) => {
+    setCity(selectedCity);
+  };
+
+  const handleTravelerUpdate = (travelers: any[]) => {
+      // Map form data to Traveler interface if needed, assuming match for now
+      setTravelers(travelers as Traveler[]);
+  };
+
+  const handleSubmit = async () => {
+      await submitApplication();
+      if (useApplicationStore.getState().submissionStatus === 'success') {
+          setStep("confirmation");
+      }
+  };
+  
+  const handleClose = () => {
+      if (step === 'confirmation') {
+          reset();
+          setStep('city');
+      }
+      onClose();
+  };
 
   if (!isOpen) return null;
 
@@ -25,7 +59,7 @@ export function AppointmentWizard({ isOpen, onClose }: AppointmentWizardProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        onClick={onClose}
+        onClick={handleClose}
         className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
       />
 
@@ -37,7 +71,7 @@ export function AppointmentWizard({ isOpen, onClose }: AppointmentWizardProps) {
         className="relative bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl p-8 md:p-12 z-10"
       >
         <button 
-          onClick={onClose}
+          onClick={handleClose}
           className="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-100 text-gray-500 transition-colors"
         >
           <X className="h-6 w-6" />
@@ -60,38 +94,38 @@ export function AppointmentWizard({ isOpen, onClose }: AppointmentWizardProps) {
                   city="Pan India" 
                   date="31 Jan" 
                   isFastest 
-                  selected={selectedCity === "Pan India"} 
-                  onClick={() => setSelectedCity("Pan India")}
+                  selected={city === "Pan India"} 
+                  onClick={() => handleCitySelect("Pan India")}
                 />
                 <CityOption 
                   city="Mumbai" 
                   date="01 May" 
-                  selected={selectedCity === "Mumbai"} 
-                  onClick={() => setSelectedCity("Mumbai")}
+                  selected={city === "Mumbai"} 
+                  onClick={() => handleCitySelect("Mumbai")}
                 />
                 <CityOption 
                   city="Delhi" 
                   date="17 Mar" 
-                  selected={selectedCity === "Delhi"} 
-                  onClick={() => setSelectedCity("Delhi")}
+                  selected={city === "Delhi"} 
+                  onClick={() => handleCitySelect("Delhi")}
                 />
                 <CityOption 
                   city="Hyderabad" 
                   date="17 Mar" 
-                  selected={selectedCity === "Hyderabad"} 
-                  onClick={() => setSelectedCity("Hyderabad")}
+                  selected={city === "Hyderabad"} 
+                  onClick={() => handleCitySelect("Hyderabad")}
                 />
                 <CityOption 
                   city="Kolkata" 
                   date="17 Mar" 
-                  selected={selectedCity === "Kolkata"} 
-                  onClick={() => setSelectedCity("Kolkata")}
+                  selected={city === "Kolkata"} 
+                  onClick={() => handleCitySelect("Kolkata")}
                 />
                 <CityOption 
                   city="Chennai" 
                   date="31 May" 
-                  selected={selectedCity === "Chennai"} 
-                  onClick={() => setSelectedCity("Chennai")}
+                  selected={city === "Chennai"} 
+                  onClick={() => handleCitySelect("Chennai")}
                 />
              </div>
              
@@ -99,7 +133,7 @@ export function AppointmentWizard({ isOpen, onClose }: AppointmentWizardProps) {
                size="lg" 
                className="w-full max-w-md mx-auto h-14 text-lg"
                onClick={() => setStep("details")}
-               disabled={!selectedCity}
+               disabled={!city}
              >
                Continue
              </Button>
@@ -108,14 +142,29 @@ export function AppointmentWizard({ isOpen, onClose }: AppointmentWizardProps) {
 
         {step === "details" && (
           <div className="max-w-xl mx-auto">
-             <TravelerForm onUpdate={(travelers) => console.log(travelers)} />
+             <TravelerForm onUpdate={handleTravelerUpdate} />
              
+             {errorMessage && (
+                 <div className="bg-red-50 text-red-600 p-4 rounded-lg mt-4 flex items-center gap-2">
+                     <AlertCircle className="h-5 w-5" />
+                     {errorMessage}
+                 </div>
+             )}
+
              <Button 
                size="lg" 
                className="w-full h-14 mt-8 text-lg"
-               onClick={() => setStep("confirmation")}
+               onClick={handleSubmit}
+               disabled={submissionStatus === 'submitting'}
              >
-               Continue
+               {submissionStatus === 'submitting' ? (
+                   <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Submitting...
+                   </>
+               ) : (
+                   "Submit Application"
+               )}
              </Button>
           </div>
         )}
@@ -125,15 +174,15 @@ export function AppointmentWizard({ isOpen, onClose }: AppointmentWizardProps) {
                <div className="h-24 w-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                  <CheckCircle className="h-12 w-12 text-green-600" />
                </div>
-               <h2 className="text-3xl font-bold mb-4">Details Saved!</h2>
+               <h2 className="text-3xl font-bold mb-4">Application Submitted!</h2>
                <p className="text-gray-600 mb-8">
-                 We are mocking the rest of the flow here. In a real app, you would now proceed to payment gateway.
+                 Your details have been saved successfully. Our team will verify your documents and be in touch shortly.
                </p>
                <div className="bg-primary/5 border border-primary/20 rounded-xl p-6 mb-8">
                  <div className="text-sm text-textLight uppercase font-semibold mb-2">Total Payable</div>
                  <div className="text-4xl font-bold text-primary">₹17,200</div>
                </div>
-               <Button onClick={onClose} size="lg" className="w-full">
+               <Button onClick={handleClose} size="lg" className="w-full">
                  Done
                </Button>
             </div>
@@ -143,3 +192,4 @@ export function AppointmentWizard({ isOpen, onClose }: AppointmentWizardProps) {
     </div>
   );
 }
+

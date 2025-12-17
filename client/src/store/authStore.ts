@@ -1,12 +1,14 @@
 import { create } from "zustand";
-import type { User } from "firebase/auth";
+import { User } from "firebase/auth";
+import { AuthService } from "@/config/firebaseConfig";
 
 type AuthState = {
   user: User | null;
   loading: boolean;
   setUser: (user: User | null) => void;
   setLoading: (loading: boolean) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
+  initialize: () => () => void; // Returns unsubscribe function
 };
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -14,5 +16,19 @@ export const useAuthStore = create<AuthState>((set) => ({
   loading: true,
   setUser: (user) => set({ user }),
   setLoading: (loading) => set({ loading }),
-  logout: () => set({ user: null }),
+  logout: async () => {
+    try {
+        await AuthService.logout();
+        set({ user: null });
+    } catch (error) {
+        console.error("Logout failed", error);
+    }
+  },
+  initialize: () => {
+    set({ loading: true });
+    const unsubscribe = AuthService.onAuthChange((user) => {
+      set({ user, loading: false });
+    });
+    return unsubscribe;
+  },
 }));

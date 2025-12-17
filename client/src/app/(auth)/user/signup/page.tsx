@@ -1,20 +1,37 @@
 "use client";
 
+import { AuthService } from "@/config/firebaseConfig";
+import { api } from "@/lib/api";
 import { useState, FormEvent } from "react";
+import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+
+  const submitUserSignupToServer = async(firebaseId:string) =>{
+    try {
+      const response = await api.post("/user/signup",{firebaseId});
+      console.log(response.data);
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
     try {
-      // TODO: integrate Firebase Auth (createUserWithEmailAndPassword)
-      // and update useAuthStore
+      const firebaseId = await AuthService.signupWithEmail(email, password);
+      const response = await submitUserSignupToServer(firebaseId);
+      console.log(response);
+      router.back();
     } catch (err) {
       setError("Failed to create account. Please try again.");
     } finally {

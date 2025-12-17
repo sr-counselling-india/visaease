@@ -14,14 +14,21 @@ import { AppointmentCalendar } from "@/components/country/AppointmentCalendar";
 import { ServiceTierSelector } from "@/components/country/ServiceTierSelector";
 import { FaqSection } from "@/components/country/FaqSection";
 import { SimulatorWidget } from "@/components/country/SimulatorWidget";
+import { useApplicationStore } from "@/store/applicationStore";
 
 export default function CountryDetails({ params }: { params: Promise<{ countryName: string }> }) {
   const { countryName } = use(params);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const setCountry = useApplicationStore((state) => state.setCountry);
   
   const country = countryName === 'usa' ? 'United States' : 
                  countryName === 'uae' ? 'United Arab Emirates' : 
                  countryName.charAt(0).toUpperCase() + countryName.slice(1);
+
+  React.useEffect(() => {
+    setCountry(country);
+  }, [country, setCountry]);
+
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] font-sans selection:bg-primary/20 selection:text-primary">

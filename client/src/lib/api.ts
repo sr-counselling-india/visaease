@@ -1,24 +1,38 @@
-import axios, { type AxiosRequestHeaders } from "axios";
-import { API } from "@/constants/api";
-import { TOKENS } from "@/constants/tokens";
+import axios from "axios";
+import { AuthService } from "@/config/firebaseConfig";
+
+const baseURL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 export const api = axios.create({
-  baseURL: API.BASE_URL,
+  baseURL,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
-api.interceptors.request.use((config) => {
-  if (typeof window !== "undefined") {
-    const token = localStorage.getItem(TOKENS.ACCESS_TOKEN);
-
-    if (token) {
-      // Ensure headers exists and satisfy Axios' expected header type.
-      const headers: AxiosRequestHeaders = (config.headers ?? {}) as AxiosRequestHeaders;
-      headers.Authorization = `Bearer ${token}`;
-      config.headers = headers;
+api.interceptors.request.use(
+  async (config) => {
+    try {
+      // Get fresh token, forceRefresh if needed could be handled here too
+      const token = await AuthService.getUserAccessToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } catch (error) {
+      console.error("Error attaching auth token", error);
     }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
+);
 
-  return config;
-});
-
-export default api;
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Global error handling logic (e.g. logging, toast notifications)
+    console.error("API Error:", error.response?.data || error.message);
+    return Promise.reject(error);
+  }
+);
