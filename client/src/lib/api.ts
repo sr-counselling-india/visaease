@@ -15,6 +15,8 @@ api.interceptors.request.use(
     try {
       // Get fresh token, forceRefresh if needed could be handled here too
       const token = await AuthService.getUserAccessToken();
+      console.log("Access Token " + token);
+
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }

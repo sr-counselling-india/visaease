@@ -1,4 +1,4 @@
-const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000/api";
+const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";
 
 export const API = {
   BASE_URL: baseUrl,
@@ -6,6 +6,10 @@ export const API = {
     LOGIN: `${baseUrl}/auth/login`,
     SIGNUP: `${baseUrl}/auth/register`,
     ME: `${baseUrl}/auth/me`,
+  },
+  ADMIN: {
+    DASHBOARD_METRICS: `${baseUrl}/admin/dashboard-metrics`,
+    APPLICATIONS: `${baseUrl}/admin/applications`,
   },
   APPLICATIONS: {
     ROOT: `${baseUrl}/applications`,

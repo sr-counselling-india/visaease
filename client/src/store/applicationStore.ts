@@ -65,6 +65,9 @@ export const useApplicationStore = create<ApplicationState>((set, get) => ({
         travelers: state.travelers,
       };
 
+      console.log(payload);
+      
+
       await api.post('/applications', payload);
       set({ submissionStatus: 'success' });
     } catch (error: any) {

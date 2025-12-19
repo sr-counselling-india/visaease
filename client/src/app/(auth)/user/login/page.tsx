@@ -18,7 +18,7 @@ export default function LoginPage() {
 
   const submitUserLoginToServer = async (firebaseId: string) => {
     try {
-      const response = await api.post("/users/signup", { firebaseId });
+      const response = await api.post("/user/signup", { firebaseId });
       console.log(response.data);
       return response.data;
     } catch (error) {
