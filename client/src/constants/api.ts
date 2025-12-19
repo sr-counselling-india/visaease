@@ -10,6 +10,7 @@ export const API = {
   ADMIN: {
     DASHBOARD_METRICS: `${baseUrl}/admin/dashboard-metrics`,
     APPLICATIONS: `${baseUrl}/admin/applications`,
+    APPLICATION_DETAIL: (id: string | number) => `${baseUrl}/admin/application/${id}`,
   },
   APPLICATIONS: {
     ROOT: `${baseUrl}/applications`,

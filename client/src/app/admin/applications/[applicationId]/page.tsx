@@ -1,23 +1,124 @@
 "use client";
 
-import { use, useState } from "react";
-import { MOCK_APPLICATIONS } from "@/lib/mockAdminData";
+import { use, useState, useEffect } from "react";
 import { ArrowLeft, User, Calendar, FileText, CheckCircle, AlertTriangle, XCircle, Phone, Mail, Globe } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
+import { API } from "@/constants/api";
+
+// Interface matching the provided JSON response
+interface APIApplicationDetail {
+  id: number;
+  status: string;
+  applicationType: string;
+  user: {
+    id: number;
+    firebaseId: string;
+    email: string;
+    name: string;
+    role: string;
+  };
+  typeOfTrip: string;
+  slotCity: string;
+  startDate: string;
+  country: {
+    id: number;
+    name: string;
+    slots: number;
+    fees30: number;
+    fees45: number;
+    typesAvailable: string[];
+    citySlot: string[];
+  };
+  returnDate: string;
+  travellers: {
+    id: number;
+    name: string;
+    passportNo: string;
+  }[];
+}
+
+// UI Interface (similar to what was used before, but adapted)
+interface ApplicationUI {
+  id: string;
+  userName: string;
+  status: string;
+  totalAmount: string;
+  travelers: number;
+  country: string;
+  visaType: string;
+  details: {
+    passportNumber: string;
+    travelDates: string;
+    phone: string;
+    email: string;
+  };
+}
 
 export default function ApplicationDetails({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
   const router = useRouter();
-  const application = MOCK_APPLICATIONS.find(app => app.id === applicationId);
+  const [application, setApplication] = useState<ApplicationUI | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!application) {
-    return <div className="p-8 text-center text-gray-500">Application not found</div>;
+  useEffect(() => {
+    const fetchApplication = async () => {
+      try {
+        // The API constants file has APPLICATION_DETAIL defined as a function
+        const url = API.ADMIN.APPLICATION_DETAIL(applicationId);
+        const response = await api.get(url);
+        const data = response.data.data as APIApplicationDetail;
+        
+        // Map API data to UI format
+        let status = 'Pending';
+        const apiStatus = data.status.toUpperCase();
+        if (apiStatus === 'APPROVED') status = 'Approved';
+        else if (apiStatus === 'REJECTED') status = 'Rejected';
+        else if (apiStatus === 'ACTION_REQUIRED') status = 'Action Required';
+
+        const uiApp: ApplicationUI = {
+          id: `${data.id}`,
+          userName: data.user.name || data.user.email.split('@')[0],
+          status: status,
+          // Total amount not explicitly in response, using mock or calculated if available later. 
+          // For now using placeholder "Wait for API" as per previous agreement or 0
+          totalAmount: "Wait for API", 
+          travelers: data.travellers.length,
+          country: data.country.name,
+          visaType: data.typeOfTrip,
+          details: {
+            passportNumber: data.travellers[0]?.passportNo || "N/A",
+            travelDates: `${data.startDate} - ${data.returnDate || '...'}`,
+            phone: "N/A", // Not in API
+            email: data.user.email
+          }
+        };
+
+        setApplication(uiApp);
+      } catch (err) {
+        console.error("Failed to fetch application details:", err);
+        setError("Failed to load application details.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchApplication();
+  }, [applicationId]);
+
+  if (loading) {
+     return <div className="p-8 text-center text-gray-500">Loading application details...</div>;
+  }
+
+  if (error || !application) {
+    return <div className="p-8 text-center text-gray-500">{error || "Application not found"}</div>;
   }
 
   const handleApprove = () => {
-    // Mock approve logic
+    // Implement approve logic call to backend here later
     alert(`Application ${applicationId} approved!`);
     router.push('/admin/applications');
   };

@@ -172,7 +172,7 @@ export default function AdminDashboard() {
           </Link>
         </div>
         
-        <ApplicationsTable applications={applications} limit={5} />
+        <ApplicationsTable applications={applications}  />
       </div>
     </div>
   );
