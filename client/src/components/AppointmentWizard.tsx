@@ -182,9 +182,20 @@ export function AppointmentWizard({ isOpen, onClose }: AppointmentWizardProps) {
                  <div className="text-sm text-textLight uppercase font-semibold mb-2">Total Payable</div>
                  <div className="text-4xl font-bold text-primary">₹17,200</div>
                </div>
-               <Button onClick={handleClose} size="lg" className="w-full">
-                 Done
-               </Button>
+              <div className="space-y-3">
+                  <Button 
+                    onClick={() => {
+                        window.location.href = '/application/ds160';
+                    }} 
+                    size="lg" 
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    Start DS160 Form
+                  </Button>
+                  <Button onClick={handleClose} variant="outline" size="lg" className="w-full">
+                    Close
+                  </Button>
+               </div>
             </div>
         )}
 
